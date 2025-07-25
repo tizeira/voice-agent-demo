@@ -1,0 +1,25 @@
+{
+  "name": "my-project",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "server": "tsx server.ts",
+    "server:dev": "tsx watch server.ts"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "tsx": "^4.20.3",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "@openai/agents": "^0.0.13",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "zod": "<=3.25.67"
+  }
+}
