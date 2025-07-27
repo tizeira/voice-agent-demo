@@ -31,7 +31,13 @@ export default async function handler(req: any, res: any) {
     }: DashboardQuery = req.query as any;
 
     // Connect to Neon database
-    const sql = neon(process.env.DATABASE_URL!);
+    const dbUrl = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING;
+    
+    if (!dbUrl) {
+      return res.status(500).json({ error: 'Database URL not configured' });
+    }
+    
+    const sql = neon(dbUrl);
 
     // Build WHERE conditions
     const conditions = [];

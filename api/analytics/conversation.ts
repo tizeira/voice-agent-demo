@@ -26,11 +26,13 @@ export default async function handler(req: any, res: any) {
     }
 
     // Connect to Neon database
-    if (!process.env.DATABASE_URL) {
-    return res.status(500).json({ error: 'DATABASE_URL not configured' });
-  }
+    const dbUrl = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING;
+    
+    if (!dbUrl) {
+      return res.status(500).json({ error: 'Database URL not configured' });
+    }
   
-  const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(dbUrl);
 
     // Insert conversation analytics
     const conversationResult = await sql`

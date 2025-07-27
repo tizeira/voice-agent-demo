@@ -6,16 +6,17 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   
   try {
-    // 1. Verificar que DATABASE_URL existe
-    if (!process.env.DATABASE_URL) {
+    // 1. Verificar variables disponibles de Neon
+    const dbUrl = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING;
+    
+    if (!dbUrl) {
       return res.status(500).json({ 
-        error: 'DATABASE_URL not found',
-        env_keys: Object.keys(process.env).filter(k => k.includes('DATA'))
+        error: 'No database URL found',
+        available_vars: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES'))
       });
     }
 
     // 2. Verificar formato de URL
-    const dbUrl = process.env.DATABASE_URL;
     const urlInfo = {
       starts_with_postgresql: dbUrl.startsWith('postgresql://'),
       has_pooler: dbUrl.includes('-pooler'),
