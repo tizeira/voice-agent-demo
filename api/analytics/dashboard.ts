@@ -1,5 +1,4 @@
 // Vercel API Route for analytics dashboard data
-import { NextApiRequest, NextApiResponse } from 'next';
 import { neon } from '@neondatabase/serverless';
 
 interface DashboardQuery {
@@ -9,10 +8,7 @@ interface DashboardQuery {
   limit?: number;
 }
 
-export default async function handler(
-  req: NextApiRequest, 
-  res: NextApiResponse
-) {
+export default async function handler(req: any, res: any) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

@@ -1,12 +1,7 @@
-// Vercel API Route for conversation analytics
-import { NextApiRequest, NextApiResponse } from 'next';
+// Vercel Serverless Function for conversation analytics
 import { neon } from '@neondatabase/serverless';
-import type { AnalyticsSubmission } from '../../src/analytics';
 
-export default async function handler(
-  req: NextApiRequest, 
-  res: NextApiResponse
-) {
+export default async function handler(req: any, res: any) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
