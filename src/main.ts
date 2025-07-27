@@ -1,4 +1,11 @@
 import { RealtimeAgent, RealtimeSession } from '@openai/agents/realtime';
+import type { 
+  RealtimeAgentConfig, 
+  ConnectionConfig,
+  TransportEvent,
+  AudioEvent,
+  RealtimeSessionResponse
+} from './types';
 import './style.css';
 
 // Crear la interfaz de usuario
@@ -23,10 +30,11 @@ const disconnectBtn = document.getElementById('disconnectBtn') as HTMLButtonElem
 const conversationEl = document.getElementById('conversation')!;
 
 // Crear el agente
-const agent = new RealtimeAgent({
+const agentConfig: RealtimeAgentConfig = {
   name: 'Assistant',
   instructions: 'Eres un asistente útil que habla en español. Responde de manera amigable y concisa.',
-});
+};
+const agent = new RealtimeAgent(agentConfig);
 
 let session: RealtimeSession | null = null;
 
@@ -56,7 +64,7 @@ async function connect() {
       throw new Error(`Error del servidor: ${tokenResponse.status}`);
     }
     
-    const data = await tokenResponse.json();
+    const data: RealtimeSessionResponse = await tokenResponse.json();
     const ephemeralKey = data.client_secret.value;
     
     updateStatus('Conectando al agente de voz...');
@@ -64,10 +72,22 @@ async function connect() {
     // Crear sesión
     session = new RealtimeSession(agent, {
       model: 'gpt-4o-realtime-preview-2025-06-03',
+      config: {
+        inputAudioTranscription: {
+          model: 'whisper-1',
+        },
+        turnDetection: {
+          type: 'server_vad',
+          threshold: 0.5,
+          prefixPaddingMs: 300,
+          silenceDurationMs: 200,
+        },
+      },
     });
     
     // Configurar eventos de la sesión
-    session.on('transport_event', (event) => {
+    session.on('transport_event', (event: TransportEvent) => {
+      console.log('Transport event:', event);
       if (event.type === 'session.created') {
         updateStatus('✅ Conectado - Puedes hablar ahora');
         connectBtn.disabled = true;
@@ -75,18 +95,25 @@ async function connect() {
         addMessage('assistant', 'Hola! Soy tu asistente de voz. ¿En qué puedo ayudarte?');
       }
     });
+
+    // Manejar eventos de audio (disponible en la API)
+    session.on('audio', (event: AudioEvent) => {
+      console.log('Audio event received:', event);
+    });
     
-    session.on('error', (error) => {
+    session.on('error', (error: any) => {
       console.error('Error de sesión:', error);
-      updateStatus(`Error: ${error.error}`, true);
+      const errorMessage = error.message || error.error || 'Error desconocido';
+      updateStatus(`Error: ${errorMessage}`, true);
     });
     
     // Conectar con el token efímero
-    await session.connect({
+    const connectionConfig: ConnectionConfig = {
       apiKey: ephemeralKey,
-    });
+    };
+    await session.connect(connectionConfig);
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error al conectar:', error);
     updateStatus(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`, true);
   }
