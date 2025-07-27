@@ -210,7 +210,8 @@ export default async function handler(req: any, res: any) {
     
     res.status(500).json({ 
       error: 'Failed to fetch dashboard data',
-      details: isDevelopment ? (error as Error).message : 'Internal server error',
+      details: (error as any).message || 'Internal server error',
+      error_code: (error as any).code,
       timestamp: new Date().toISOString()
     });
   }
