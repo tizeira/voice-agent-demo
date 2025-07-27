@@ -1,6 +1,31 @@
 // Vercel Serverless Function for conversation analytics
 import { neon } from '@neondatabase/serverless';
 
+interface AnalyticsSubmission {
+  sessionId: string;
+  shopDomain: string;
+  startTime: string;
+  endTime?: string;
+  duration?: number;
+  messageCount?: number;
+  userMessages?: number;
+  assistantMessages?: number;
+  conversationData?: any;
+  userSatisfaction?: number;
+  metadata?: any;
+  messages?: Array<{
+    role: string;
+    content: string;
+    timestamp: number;
+    id?: string;
+  }>;
+  events?: Array<{
+    type: string;
+    timestamp: string;
+    data?: any;
+  }>;
+}
+
 export default async function handler(req: any, res: any) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -123,7 +148,8 @@ export default async function handler(req: any, res: any) {
     
     res.status(500).json({ 
       error: 'Failed to save analytics',
-      details: isDevelopment ? (error as Error).message : 'Internal server error',
+      details: (error as any).message || 'Internal server error',
+      error_code: (error as any).code,
       timestamp: new Date().toISOString()
     });
   }
