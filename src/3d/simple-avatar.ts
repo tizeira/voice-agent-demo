@@ -255,7 +255,7 @@ export function createSimpleAvatar(containerId: string): Simple3DAvatar {
   // Random blinking
   function startBlinking() {
     blinkInterval = window.setInterval(() => {
-      const eyes = container.querySelectorAll('.eye');
+      const eyes = container!.querySelectorAll('.eye');
       eyes.forEach(eye => {
         const eyeElement = eye as HTMLElement;
         eyeElement.style.animation = 'eyeBlink 0.3s ease-in-out';
