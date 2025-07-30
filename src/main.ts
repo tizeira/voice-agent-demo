@@ -1,5 +1,5 @@
 import './style.css';
-import { createSimpleAvatar, updateAvatarWithAudio } from './3d/simple-avatar';
+import { createSimpleAvatar } from './3d/simple-avatar';
 
 // Crear la interfaz de usuario con 3D avatar
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -116,16 +116,16 @@ async function connect() {
             addMessage('assistant', content.transcript);
             // Clara terminó de hablar - volver a listening
             if (claraAvatar) {
-              claraAvatar.isSpeaking = false;
-              claraAvatar.isListening = true;
+              claraAvatar.setSpeaking(false);
+              claraAvatar.setListening(true);
             }
           }
         } else if (data.type === 'input_audio_buffer.speech_started') {
           addMessage('user', '[Hablando...]');
           // Usuario está hablando - Clara escucha
           if (claraAvatar) {
-            claraAvatar.isSpeaking = false;  
-            claraAvatar.isListening = true;
+            claraAvatar.setSpeaking(false);  
+            claraAvatar.setListening(true);
           }
         } else if (data.type === 'input_audio_buffer.speech_stopped') {
           // Remover el mensaje temporal de "[Hablando...]"
@@ -136,8 +136,8 @@ async function connect() {
         } else if (data.type === 'response.audio.delta') {
           // Clara está hablando
           if (claraAvatar) {
-            claraAvatar.isListening = false;
-            claraAvatar.isSpeaking = true;
+            claraAvatar.setListening(false);
+            claraAvatar.setSpeaking(true);
           }
         }
       } catch (error) {
@@ -153,7 +153,7 @@ async function connect() {
       
       // Activar estado listening del avatar
       if (claraAvatar) {
-        claraAvatar.isListening = true;
+        claraAvatar.setListening(true);
       }
       
       addMessage('assistant', 'Hola! Soy Clara, tu dermatóloga virtual. Cuéntame, ¿qué preocupaciones tienes sobre tu piel?');
@@ -217,8 +217,8 @@ function disconnect() {
   
   // Resetear avatar a estado idle
   if (claraAvatar) {
-    claraAvatar.isListening = false;
-    claraAvatar.isSpeaking = false;
+    claraAvatar.setListening(false);
+    claraAvatar.setSpeaking(false);
   }
   
   updateStatus('Consulta finalizada');

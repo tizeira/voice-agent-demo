@@ -5,8 +5,8 @@
 
 interface Simple3DAvatar {
   container: HTMLElement;
-  isListening: boolean;
-  isSpeaking: boolean;
+  setListening: (value: boolean) => void;
+  setSpeaking: (value: boolean) => void;
   cleanup: () => void;
 }
 
@@ -250,17 +250,17 @@ export function createSimpleAvatar(containerId: string): Simple3DAvatar {
 
   const avatarElement = container.querySelector('.simple-avatar') as HTMLElement;
   
-  let blinkInterval: number;
-  let talkInterval: number;
+  let blinkInterval: number | undefined;
 
   // Random blinking
   function startBlinking() {
     blinkInterval = window.setInterval(() => {
       const eyes = container.querySelectorAll('.eye');
       eyes.forEach(eye => {
-        eye.style.animation = 'eyeBlink 0.3s ease-in-out';
+        const eyeElement = eye as HTMLElement;
+        eyeElement.style.animation = 'eyeBlink 0.3s ease-in-out';
         setTimeout(() => {
-          eye.style.animation = '';
+          eyeElement.style.animation = '';
         }, 300);
       });
     }, 3000 + Math.random() * 4000);
@@ -270,10 +270,8 @@ export function createSimpleAvatar(containerId: string): Simple3DAvatar {
 
   return {
     container,
-    isListening: false,
-    isSpeaking: false,
     
-    set isListening(value: boolean) {
+    setListening(value: boolean) {
       if (value) {
         avatarElement.classList.add('listening');
         avatarElement.classList.remove('speaking');
@@ -282,7 +280,7 @@ export function createSimpleAvatar(containerId: string): Simple3DAvatar {
       }
     },
     
-    set isSpeaking(value: boolean) {
+    setSpeaking(value: boolean) {
       if (value) {
         avatarElement.classList.add('speaking');
         avatarElement.classList.remove('listening');
@@ -293,7 +291,6 @@ export function createSimpleAvatar(containerId: string): Simple3DAvatar {
     
     cleanup() {
       if (blinkInterval) clearInterval(blinkInterval);
-      if (talkInterval) clearInterval(talkInterval);
       if (style.parentNode) {
         style.parentNode.removeChild(style);
       }
