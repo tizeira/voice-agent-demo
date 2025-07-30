@@ -1,16 +1,36 @@
 import './style.css';
+import { createSimpleAvatar, updateAvatarWithAudio } from './3d/simple-avatar';
 
-// Crear la interfaz de usuario
+// Crear la interfaz de usuario con 3D avatar
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="container">
-    <h1>🎤 Voice Agent Demo</h1>
-    <div class="status" id="status">Inicializando...</div>
-    <div class="controls">
-      <button id="connectBtn" disabled>Conectar</button>
-      <button id="disconnectBtn" disabled>Desconectar</button>
-    </div>
-    <div class="conversation" id="conversation">
-      <p>Haz clic en "Conectar" y permite el acceso al micrófono para comenzar a hablar con el asistente.</p>
+    <h1>🩺 Clara - Tu Dermatóloga Virtual</h1>
+    <div class="main-content">
+      <div class="avatar-section">
+        <div id="clara-3d-container" class="clara-avatar-3d">
+          <div class="avatar-placeholder">
+            <div class="avatar-icon">👩‍⚕️</div>
+            <div class="avatar-loading">Clara se está preparando...</div>
+            <div class="ready-player-notice">Avatar 3D próximamente</div>
+          </div>
+        </div>
+        <div class="status" id="status">Inicializando...</div>
+      </div>
+      <div class="interaction-section">
+        <div class="controls">
+          <button id="connectBtn" disabled>🎤 Conversar con Clara</button>
+          <button id="disconnectBtn" disabled>🔇 Finalizar consulta</button>
+        </div>
+        <div class="conversation" id="conversation">
+          <div class="conversation-intro">
+            <h3>💬 Consulta Dermatológica</h3>
+            <p>Haz clic en "Conversar con Clara" para comenzar tu análisis de piel personalizado.</p>
+            <div class="session-info">
+              <small>⏱️ Duración recomendada: 3-4 minutos</small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 `;
@@ -25,6 +45,9 @@ const conversationEl = document.getElementById('conversation')!;
 let peerConnection: RTCPeerConnection | null = null;
 let dataChannel: RTCDataChannel | null = null;
 let localStream: MediaStream | null = null;
+
+// Variables para avatar 3D
+let claraAvatar: any = null;
 
 // Función para actualizar el estado
 function updateStatus(message: string, isError = false) {
@@ -91,14 +114,30 @@ async function connect() {
           const content = data.item.content[0];
           if (content?.transcript) {
             addMessage('assistant', content.transcript);
+            // Clara terminó de hablar - volver a listening
+            if (claraAvatar) {
+              claraAvatar.isSpeaking = false;
+              claraAvatar.isListening = true;
+            }
           }
         } else if (data.type === 'input_audio_buffer.speech_started') {
           addMessage('user', '[Hablando...]');
+          // Usuario está hablando - Clara escucha
+          if (claraAvatar) {
+            claraAvatar.isSpeaking = false;  
+            claraAvatar.isListening = true;
+          }
         } else if (data.type === 'input_audio_buffer.speech_stopped') {
           // Remover el mensaje temporal de "[Hablando...]"
           const lastMessage = conversationEl.lastElementChild;
           if (lastMessage?.textContent?.includes('[Hablando...]')) {
             lastMessage.remove();
+          }
+        } else if (data.type === 'response.audio.delta') {
+          // Clara está hablando
+          if (claraAvatar) {
+            claraAvatar.isListening = false;
+            claraAvatar.isSpeaking = true;
           }
         }
       } catch (error) {
@@ -111,7 +150,13 @@ async function connect() {
       updateStatus('✅ Conectado - Puedes hablar ahora');
       connectBtn.disabled = true;
       disconnectBtn.disabled = false;
-      addMessage('assistant', 'Hola! Soy Clara, tu asistente de voz. ¿En qué puedo ayudarte?');
+      
+      // Activar estado listening del avatar
+      if (claraAvatar) {
+        claraAvatar.isListening = true;
+      }
+      
+      addMessage('assistant', 'Hola! Soy Clara, tu dermatóloga virtual. Cuéntame, ¿qué preocupaciones tienes sobre tu piel?');
     });
     
     // Crear offer SDP
@@ -169,7 +214,14 @@ function cleanup() {
 // Función para desconectar
 function disconnect() {
   cleanup();
-  updateStatus('Desconectado');
+  
+  // Resetear avatar a estado idle
+  if (claraAvatar) {
+    claraAvatar.isListening = false;
+    claraAvatar.isSpeaking = false;
+  }
+  
+  updateStatus('Consulta finalizada');
   connectBtn.disabled = false;
   disconnectBtn.disabled = true;
 }
@@ -178,6 +230,13 @@ function disconnect() {
 connectBtn.addEventListener('click', connect);
 disconnectBtn.addEventListener('click', disconnect);
 
-// Habilitar el botón de conectar cuando la página esté lista
-updateStatus('Listo para conectar');
-connectBtn.disabled = false;
+// Inicializar avatar 3D y habilitar botón de conectar
+try {
+  claraAvatar = createSimpleAvatar('clara-3d-container');
+  updateStatus('Clara está lista para la consulta');
+  connectBtn.disabled = false;
+} catch (error) {
+  console.error('Error initializing avatar:', error);
+  updateStatus('Sistema inicializado (avatar en desarrollo)');
+  connectBtn.disabled = false;
+}
